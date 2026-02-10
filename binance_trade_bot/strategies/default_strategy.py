@@ -1,5 +1,6 @@
 import random
 import sys
+import time
 from datetime import datetime
 
 from binance_trade_bot.auto_trader import AutoTrader
@@ -55,7 +56,7 @@ class Strategy(AutoTrader):
                 # 1. Check if we already hold supported assets (Highest Value Priority)
                 assets = []
                 for coin in self.config.SUPPORTED_COIN_LIST:
-                    balance = self.manager.get_currency_balance(coin)
+                    balance = self.manager.get_total_balance(coin) # Use Total Balance (Free + Locked)
                     if balance > 0:
                         price = self.manager.get_ticker_price(coin + self.config.BRIDGE.symbol)
                         if price:

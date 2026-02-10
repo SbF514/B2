@@ -138,7 +138,25 @@ class BinanceAPIManager:
                     return 0.0
                 return cache_balances.get(currency_symbol, 0.0)
 
+                return cache_balances.get(currency_symbol, 0.0)
+
             return balance
+
+    def get_total_balance(self, currency_symbol: str) -> float:
+        """
+        Get total balance (free + locked) of a specific coin
+        """
+        # We need to fetch fresh data to include locked amounts, as cache might only store 'free'
+        # based on current implementation of get_currency_balance
+        try:
+             account = self.binance_client.get_account()
+             for balance in account["balances"]:
+                 if balance["asset"] == currency_symbol:
+                     return float(balance["free"]) + float(balance["locked"])
+             return 0.0
+        except Exception as e:
+            self.logger.warning(f"Failed to fetch total balance for {currency_symbol}: {e}")
+            return 0.0
 
     def retry(self, func, *args, **kwargs):
         for attempt in range(20):
