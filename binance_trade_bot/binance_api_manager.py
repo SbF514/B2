@@ -292,6 +292,10 @@ class BinanceAPIManager:
 
         self.logger.info(f"BUY QTY {order_quantity}")
 
+        if order_quantity == 0:
+            self.logger.warning(f"Insufficient funds or invalid quantity (0.0) to buy {origin_symbol}. Aborting.")
+            return None
+
         # Try to buy until successful
         order = None
         order_guard = self.stream_manager.acquire_order_guard()
