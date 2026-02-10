@@ -118,6 +118,8 @@ class BinanceAPIManager:
 
         return price
 
+            return balance
+
     def get_currency_balance(self, currency_symbol: str, force=False) -> float:
         """
         Get balance of a specific coin
