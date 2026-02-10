@@ -1,0 +1,27 @@
+services:
+  - type: worker
+    name: binance-trade-bot
+    env: docker
+    region: frankfurt # EU Central (Crypto-friendly, no US blocks)
+    plan: starter
+    dockerCommand: python -m binance_trade_bot
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: BRIDGE_SYMBOL
+        value: USDT
+      - key: TLD
+        value: com
+      - key: SCOUT_MULTIPLIER
+        value: "5"
+      - key: SCOUT_SLEEP_TIME
+        value: "5"
+      - key: STRATEGY
+        value: default
+      - key: TIME_TO_REACH_TARGET
+        value: "6"
+      # Secure variables (User must set these in Dashboard)
+      - key: API_KEY
+        sync: false
+      - key: API_SECRET_KEY
+        sync: false
