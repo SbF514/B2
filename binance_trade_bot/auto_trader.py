@@ -185,8 +185,16 @@ class AutoTrader:
                 balance = self.manager.get_currency_balance(coin.symbol)
                 if balance == 0:
                     continue
-                usd_value = self.manager.get_ticker_price(coin + "USDT")
-                btc_value = self.manager.get_ticker_price(coin + "BTC")
+                if coin.symbol == "USDT":
+                    usd_value = 1.0
+                    btc_usdt_price = self.manager.get_ticker_price("BTCUSDT")
+                    if btc_usdt_price:
+                        btc_value = 1.0 / btc_usdt_price
+                    else:
+                        btc_value = None
+                else:
+                    usd_value = self.manager.get_ticker_price(coin + "USDT")
+                    btc_value = self.manager.get_ticker_price(coin + "BTC")
                 cv = CoinValue(coin, balance, usd_value, btc_value, datetime=now)
                 session.add(cv)
                 self.db.send_update(cv)

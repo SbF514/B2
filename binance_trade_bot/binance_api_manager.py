@@ -99,10 +99,18 @@ class BinanceAPIManager:
         """
         price = self.cache.ticker_values.get(ticker_symbol, None)
         if price is None and ticker_symbol not in self.cache.non_existent_tickers:
-            self.cache.ticker_values = {
-                ticker["symbol"]: float(ticker["price"]) for ticker in self.binance_client.get_symbol_ticker()
-            }
-            self.logger.debug(f"Fetched all ticker prices: {self.cache.ticker_values}")
+            try:
+                self.cache.ticker_values = {
+                    ticker["symbol"]: float(ticker["price"]) for ticker in self.binance_client.get_symbol_ticker()
+                }
+                self.logger.debug(f"Fetched all ticker prices: {self.cache.ticker_values}")
+            except BinanceAPIException as e:
+                self.logger.warning(f"Failed to fetch tickers: {e}")
+                return None
+            except Exception as e:
+                self.logger.error(f"Unexpected error fetching tickers: {e}")
+                return None
+            
             price = self.cache.ticker_values.get(ticker_symbol, None)
             if price is None:
                 self.logger.info(f"Ticker does not exist: {ticker_symbol} - will not be fetched from now on")
