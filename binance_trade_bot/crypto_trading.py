@@ -62,7 +62,7 @@ def main():
                         "time": t.datetime.strftime("%H:%M:%S"),
                         "pair": f"{t.alt_coin_id}/{t.crypto_coin_id}",
                         "type": "SELL" if t.selling else "BUY",
-                        "price": f"{t.price:.8f}"
+                        "price": f"{t.crypto_trade_amount / t.alt_trade_amount:.8f}" if (t.alt_trade_amount and t.crypto_trade_amount) else "Pending"
                     } for t in recent_trades
                 ]
             bot_status["last_update"] = datetime.now().strftime("%H:%M:%S")

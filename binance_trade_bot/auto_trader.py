@@ -45,6 +45,9 @@ class AutoTrader:
             self.logger.info("Couldn't sell, going back to scouting mode...")
             return None
 
+        # Success: we are now holding the bridge (e.g. USDT)
+        self.db.set_current_coin(self.config.BRIDGE)
+
         result = self.manager.buy_alt(pair.to_coin, self.config.BRIDGE)
         if result is not None:
             self.db.set_current_coin(pair.to_coin)
