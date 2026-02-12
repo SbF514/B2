@@ -327,6 +327,9 @@ class BinanceAPIManager:
                 self.logger.info(order)
             except BinanceAPIException as e:
                 self.logger.info(e)
+                if "Market is closed" in str(e):
+                    self.logger.error(f"Cannot trade {origin_symbol}{target_symbol}: Market is closed. Aborting specific trade attempt.")
+                    return None
                 time.sleep(1)
             except Exception as e:  # pylint: disable=broad-except
                 self.logger.warning(f"Unexpected Error: {e}")
@@ -380,12 +383,22 @@ class BinanceAPIManager:
         order = None
         order_guard = self.stream_manager.acquire_order_guard()
         while order is None:
-            # Should sell at calculated price to avoid lost coin
-            order = self.binance_client.order_limit_sell(
-                symbol=origin_symbol + target_symbol,
-                quantity=(order_quantity_s),
-                price=from_coin_price_s,
-            )
+            try:
+                # Should sell at calculated price to avoid lost coin
+                order = self.binance_client.order_limit_sell(
+                    symbol=origin_symbol + target_symbol,
+                    quantity=(order_quantity_s),
+                    price=from_coin_price_s,
+                )
+            except BinanceAPIException as e:
+                self.logger.info(e)
+                if "Market is closed" in str(e):
+                    self.logger.error(f"Cannot trade {origin_symbol}{target_symbol}: Market is closed. Aborting specific trade attempt.")
+                    return None
+                time.sleep(1)
+            except Exception as e:
+                self.logger.warning(f"Unexpected Error during sell: {e}")
+                time.sleep(1)
 
         self.logger.info("order")
         self.logger.info(order)
