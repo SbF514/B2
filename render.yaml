@@ -1,12 +1,12 @@
 services:
-  # Service 1: The Trading Bot (Background Worker)
-  - type: worker
-    name: binance-bot-worker
+  # Consolidated Service (Bot + Dashboard)
+  - type: web
+    name: binance-trade-bot-all-in-one
     env: docker
-    region: frankfurt # EU Central
-    plan: starter
+    region: fra
+    plan: free # Use Free Tier
     dockerCommand: python -m binance_trade_bot
-    envVars: &common-env
+    envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: BRIDGE_SYMBOL
@@ -14,24 +14,17 @@ services:
       - key: TLD
         value: com
       - key: SCOUT_SLEEP_TIME
-        value: "60"
+        value: "20"
       - key: DRY_RUN
         value: "True"
-      # Database connection (Required for sharing data between Worker and API)
-      - key: DATABASE_URL
-        sync: false
-      # API Keys
+      # Binance API Keys (To be set in Render Dashboard)
       - key: API_KEY
         sync: false
       - key: API_SECRET_KEY
         sync: false
-
-  # Service 2: The API Server (For Vercel Dashboard)
-  - type: web
-    name: binance-bot-api
-    env: docker
-    region: frankfurt
-    plan: starter
-    dockerCommand: python -m binance_trade_bot.api_server
-    envVars: *common-env # Inherits all variables above
+      # Database connection (Using internal SQLite for simplicity on free tier, or keep external)
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPPORTED_COIN_LIST
+        value: "ADA ATOM BAT BTTC DASH DOGE EOS ETC ICX IOTA NEO OMG ONT QTUM TRX VET XLM XMR"
     healthCheckPath: /api/ping

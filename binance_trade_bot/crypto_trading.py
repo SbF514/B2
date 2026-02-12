@@ -1,5 +1,6 @@
 #!python3
 import time
+from datetime import datetime
 
 from .binance_api_manager import BinanceAPIManager
 from .config import Config
@@ -7,6 +8,7 @@ from .database import Database
 from .logger import Logger
 from .scheduler import SafeScheduler
 from .strategies import get_strategy
+from .dashboard import start_dashboard, bot_status
 
 
 def main():
@@ -38,9 +40,39 @@ def main():
 
     trader.initialize()
 
+    # Start the web dashboard for Render and visualization
+    start_dashboard()
+    bot_status["is_active"] = True
+    bot_status["bridge"] = config.BRIDGE_SYMBOL
+
+    def sync_dashboard():
+        try:
+            current_coin = db.get_current_coin()
+            if current_coin:
+                bot_status["current_coin"] = current_coin.symbol
+                balance = manager.get_total_balance(current_coin.symbol)
+                bot_status["balance"] = balance
+            
+            # Get last 5 trades
+            with db.db_session() as session:
+                from .models import Trade
+                recent_trades = session.query(Trade).order_by(Trade.datetime.desc()).limit(5).all()
+                bot_status["trades"] = [
+                    {
+                        "time": t.datetime.strftime("%H:%M:%S"),
+                        "pair": f"{t.alt_coin_id}/{t.crypto_coin_id}",
+                        "type": "SELL" if t.selling else "BUY",
+                        "price": f"{t.price:.8f}"
+                    } for t in recent_trades
+                ]
+            bot_status["last_update"] = datetime.now().strftime("%H:%M:%S")
+        except Exception as e:
+            logger.warning(f"Dashboard sync failed: {e}")
+
     schedule = SafeScheduler(logger)
     schedule.every(config.SCOUT_SLEEP_TIME).seconds.do(trader.scout).tag("scouting")
     schedule.every(1).minutes.do(trader.update_values).tag("updating value history")
+    schedule.every(30).seconds.do(sync_dashboard).tag("syncing dashboard")
     schedule.every(1).minutes.do(db.prune_scout_history).tag("pruning scout history")
     schedule.every(1).hours.do(db.prune_value_history).tag("pruning value history")
     try:
