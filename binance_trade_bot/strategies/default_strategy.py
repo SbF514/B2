@@ -19,13 +19,18 @@ class Strategy(AutoTrader):
 
         # check if we actually have enough of the current coin to bother scouting for jumps
         if current_coin.symbol != self.config.BRIDGE.symbol:
-            current_balance = self.manager.get_currency_balance(current_coin.symbol)
+            current_balance = self.manager.get_total_balance(current_coin.symbol)
             min_notional = self.manager.get_min_notional(current_coin.symbol, self.config.BRIDGE.symbol)
+            current_price = self.manager.get_ticker_price(current_coin.symbol + self.config.BRIDGE.symbol)
             
-            if current_balance < min_notional:
-                self.logger.info(f"Stuck state detected: Balance of {current_coin.symbol} is too low ({current_balance}). Initializing bridge scout...")
-                self.bridge_scout()
-                return
+            if current_price:
+                current_value = current_balance * current_price
+                # We use 0.8 * min_notional as a buffer to avoid false positives on small price dips
+                # if value is less than $5-8, we consider it "dust" or stuck
+                if current_value < (min_notional * 0.8):
+                    self.logger.info(f"Stuck state detected: Value of {current_coin.symbol} is too low (${current_value:.2f}). Initializing bridge scout...")
+                    self.bridge_scout()
+                    return
 
         # Display on the console, the current coin+Bridge, so users can see *some* activity and not think the bot has
         # stopped. Not logging though to reduce log size.
