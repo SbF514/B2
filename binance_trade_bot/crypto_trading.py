@@ -51,7 +51,16 @@ def main():
             if current_coin:
                 bot_status["current_coin"] = current_coin.symbol
                 balance = manager.get_total_balance(current_coin.symbol)
-                bot_status["balance"] = balance
+                
+                # Calculate value in Bridge currency (e.g. USDT)
+                if current_coin.symbol != config.BRIDGE_SYMBOL:
+                    price = manager.get_ticker_price(current_coin.symbol + config.BRIDGE_SYMBOL)
+                    if price:
+                        bot_status["balance"] = balance * price
+                    else:
+                        bot_status["balance"] = 0.0 # Price not found
+                else:
+                    bot_status["balance"] = balance
             
             # Get last 5 trades
             with db.db_session() as session:
