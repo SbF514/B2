@@ -16,6 +16,17 @@ class Strategy(AutoTrader):
         Scout for potential jumps from the current coin to another coin
         """
         current_coin = self.db.get_current_coin()
+
+        # check if we actually have enough of the current coin to bother scouting for jumps
+        if current_coin.symbol != self.config.BRIDGE.symbol:
+            current_balance = self.manager.get_currency_balance(current_coin.symbol)
+            min_notional = self.manager.get_min_notional(current_coin.symbol, self.config.BRIDGE.symbol)
+            
+            if current_balance < min_notional:
+                self.logger.info(f"Stuck state detected: Balance of {current_coin.symbol} is too low ({current_balance}). Initializing bridge scout...")
+                self.bridge_scout()
+                return
+
         # Display on the console, the current coin+Bridge, so users can see *some* activity and not think the bot has
         # stopped. Not logging though to reduce log size.
         print(
