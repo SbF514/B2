@@ -1,6 +1,8 @@
 # Binance Trade Bot
 > An automated cryptocurrency trading bot for Binance
 
+Exact same. Nothing modified. 
+
 ## Author
 Created by **Eden Gaon**
 
